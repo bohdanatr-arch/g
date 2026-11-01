@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikFamous - Follower Generator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0d0f12;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* TikTok glitch / neon background ambient effect */
+        .ambient-glow {
+            position: fixed;
+            width: 350px;
+            height: 350px;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .glow-cyan {
+            background: #25F4EE;
+            top: 10%;
+            left: 10%;
+        }
+        .glow-magenta {
+            background: #FE2C55;
+            bottom: 10%;
+            right: 10%;
+        }
+
+        /* Animated loading dots like in video */
+        .spinner-arc {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dot-trail {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #FE2C55;
+            border-radius: 50%;
+            animation: orbit 1.4s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+        }
+        .dot-trail:nth-child(1) { animation-delay: 0s; transform: scale(1); }
+        .dot-trail:nth-child(2) { animation-delay: 0.12s; transform: scale(0.85); background: #ff476e; }
+        .dot-trail:nth-child(3) { animation-delay: 0.24s; transform: scale(0.7); background: #ff6889; }
+        .dot-trail:nth-child(4) { animation-delay: 0.36s; transform: scale(0.55); background: #ffa4b7; }
+
+        @keyframes orbit {
+            0% {
+                transform: rotate(0deg) translateX(32px) rotate(0deg);
+                opacity: 1;
+            }
+            80% {
+                opacity: 0.3;
+            }
+            100% {
+                transform: rotate(360deg) translateX(32px) rotate(-360deg);
+                opacity: 1;
+            }
+        }
+
+        /* Pill progress bar with neon cyan fill */
+        .custom-progress-track {
+            background: #f1f3f7;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
+            border-radius: 9999px;
+            overflow: hidden;
+            position: relative;
+        }
+        .custom-progress-bar {
+            background: linear-gradient(90deg, #1fe5dd, #2bf8f0);
+            box-shadow: 0 0 14px rgba(37, 244, 238, 0.65);
+            transition: width 0.35s ease;
+            border-radius: 9999px;
+        }
+
+        /* Custom smooth button animation */
+        .btn-action {
+            background: linear-gradient(135deg, #fe2c55, #f21f49);
+            box-shadow: 0 8px 24px -4px rgba(254, 44, 85, 0.45);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px -4px rgba(254, 44, 85, 0.55);
+        }
+        .btn-action:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 12px -2px rgba(254, 44, 85, 0.4);
+        }
+
+        /* Card selection animation */
+        .package-card {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1.5px solid #eef0f4;
+        }
+        .package-card:hover {
+            border-color: #fe2c55;
+            transform: translateY(-3px) scale(1.01);
+            box-shadow: 0 12px 24px -6px rgba(254, 44, 85, 0.15);
+        }
+
+        /* Step transitions */
+        .step-view {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .step-hidden {
+            display: none;
+            opacity: 0;
+            transform: scale(0.96);
+        }
+        .step-active {
+            display: flex;
+            opacity: 1;
+            transform: scale(1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 relative overflow-x-hidden">
+
+    <!-- Ambient glowing backgrounds -->
+    <div class="ambient-glow glow-cyan"></div>
+    <div class="ambient-glow glow-magenta"></div>
+
+    <!-- Main Container -->
+    <main class="w-full max-w-[420px] relative z-10 my-auto">
+        
+        <!-- Header outside the card -->
+        <header class="text-center mb-4">
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white uppercase drop-shadow-sm flex items-center justify-center gap-2">
+                <span>TIKTOK</span>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#25F4EE] to-[#FE2C55]">GENERATOR</span>
+            </h1>
+            <p class="text-slate-400 text-sm font-medium mt-1">Get free followers for your account.</p>
+        </header>
+
+        <!-- White App Card -->
+        <div class="bg-white rounded-[32px] p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5)] border border-slate-100 flex flex-col min-h-[490px] justify-between relative overflow-hidden">
+            
+            <!-- Top Status Pill (Online users & Status) -->
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-3">
+                <div class="flex flex-col">
+                    <span class="text-[10px] tracking-wider font-extrabold text-slate-400 uppercase">STATUS:</span>
+                    <span class="text-xs font-bold text-emerald-500 flex items-center gap-1.5 mt-0.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        ONLINE
+                    </span>
+                </div>
+                <div class="flex flex-col text-right">
+                    <span class="text-[10px] tracking-wider font-extrabold text-slate-400 uppercase">ONLINE USERS:</span>
+                    <span id="onlineCounter" class="text-xs font-bold text-slate-700 font-mono mt-0.5">154</span>
+                </div>
+            </div>
+
+            <!-- STEP 1: Enter Username -->
+            <div id="step1" class="step-view step-active flex-col items-center justify-center flex-grow py-3">
+                <!-- Brand Logo Image -->
+                <div class="w-24 h-24 sm:w-28 sm:h-28 mb-4 relative flex items-center justify-center">
+                    <img 
+                        src="https://i.postimg.cc/FKw2q4yy/ddd.png" 
+                        alt="Brand Logo" 
+                        class="w-full h-full object-contain drop-shadow-sm select-none pointer-events-none"
+                        onerror="this.src='https://placehold.co/100x100/fe2c55/ffffff?text=Logo'"
+                    >
+                </div>
+
+                <label for="usernameInput" class="text-sm font-bold text-slate-700 mb-3 tracking-wide">
+                    Your Username
+                </label>
+
+                <!-- Input group -->
+                <div class="w-full relative mb-5">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-circle-user text-xl"></i>
+                    </div>
+                    <input 
+                        type="text" 
+                        id="usernameInput" 
+                        placeholder="Username..." 
+                        autocomplete="off"
+                        spellcheck="false"
+                        class="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 placeholder-slate-400 font-semibold focus:outline-none focus:ring-2 focus:ring-[#FE2C55] focus:bg-white transition-all text-sm sm:text-base"
+                    >
+                </div>
+
+                <!-- Connect Button -->
+                <button 
+                    id="connectBtn" 
+                    class="btn-action w-full py-4 text-white font-extrabold text-base rounded-2xl tracking-wide uppercase shadow-lg hover:shadow-xl active:scale-[0.99]"
+                >
+                    Connect
+                </button>
+            </div>
+
+            <!-- STEP 2: Connecting Spinner & Progress -->
+            <div id="step2" class="step-view step-hidden flex-col items-center justify-center flex-grow py-8">
+                <!-- Orbiting dots -->
+                <div class="spinner-arc mb-6">
+                    <div class="dot-trail"></div>
+                    <div class="dot-trail"></div>
+                    <div class="dot-trail"></div>
+                    <div class="dot-trail"></div>
+                </div>
+
+                <h3 id="connectingText" class="text-xl font-extrabold text-slate-800 mb-6 tracking-tight">
+                    Connecting...
+                </h3>
+
+                <!-- Progress pill container -->
+                <div class="w-full max-w-[280px] p-1.5 bg-white border border-slate-200/80 rounded-full shadow-inner">
+                    <div class="custom-progress-track h-4 w-full">
+                        <div id="connectingProgressBar" class="custom-progress-bar h-full w-[12%]"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 3: Choose Amount of Followers -->
+            <div id="step3" class="step-view step-hidden flex-col items-center flex-grow py-2">
+                <!-- User badge -->
+                <div class="flex items-center gap-2 mb-4 bg-slate-50 px-4 py-1.5 rounded-full border border-slate-100">
+                    <div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-xs font-bold">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div class="text-xs font-bold text-slate-600">
+                        <span class="text-slate-400 uppercase text-[10px] mr-1">USERNAME:</span>
+                        <span id="displayConnectedUser" class="text-slate-900 uppercase">USER</span>
+                    </div>
+                </div>
+
+                <h2 class="text-base font-extrabold text-slate-800 mb-4 tracking-tight">
+                    Amount of Followers
+                </h2>
+
+                <!-- Packages List -->
+                <div class="w-full space-y-3">
+                    <!-- 1000 Followers -->
+                    <div class="package-card bg-slate-50/70 hover:bg-white rounded-2xl p-3 flex flex-col items-center cursor-pointer" onclick="selectFollowers(1000)">
+                        <div class="w-12 h-12 mb-1.5 flex items-center justify-center">
+                            <img 
+                                src="https://i.postimg.cc/FKw2q4yy/ddd.png" 
+                                alt="Logo" 
+                                class="w-full h-full object-contain select-none pointer-events-none"
+                                onerror="this.src='https://placehold.co/80x80/fe2c55/ffffff?text=1K'"
+                            >
+                        </div>
+                        <span class="text-xl font-black text-slate-800 tracking-tight">1000</span>
+                        <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">FOLLOWERS</span>
+                    </div>
+
+                    <!-- 2500 Followers -->
+                    <div class="package-card bg-slate-50/70 hover:bg-white rounded-2xl p-3 flex flex-col items-center cursor-pointer" onclick="selectFollowers(2500)">
+                        <div class="w-12 h-12 mb-1.5 flex items-center justify-center">
+                            <img 
+                                src="https://i.postimg.cc/FKw2q4yy/ddd.png" 
+                                alt="Logo" 
+                                class="w-full h-full object-contain select-none pointer-events-none"
+                                onerror="this.src='https://placehold.co/80x80/fe2c55/ffffff?text=2.5K'"
+                            >
+                        </div>
+                        <span class="text-xl font-black text-slate-800 tracking-tight">2500</span>
+                        <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">FOLLOWERS</span>
+                    </div>
+
+                    <!-- 5000 Followers -->
+                    <div class="package-card bg-slate-50/70 hover:bg-white rounded-2xl p-3 flex flex-col items-center cursor-pointer" onclick="selectFollowers(5000)">
+                        <div class="w-12 h-12 mb-1.5 flex items-center justify-center">
+                            <img 
+                                src="https://i.postimg.cc/FKw2q4yy/ddd.png" 
+                                alt="Logo" 
+                                class="w-full h-full object-contain select-none pointer-events-none"
+                                onerror="this.src='https://placehold.co/80x80/fe2c55/ffffff?text=5K'"
+                            >
+                        </div>
+                        <span class="text-xl font-black text-slate-800 tracking-tight">5000</span>
+                        <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">FOLLOWERS</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 4: Live Generation Counter & Finish -->
+            <div id="step4" class="step-view step-hidden flex-col items-center justify-center flex-grow py-4">
+                
+                <!-- Follower Counter Display Box -->
+                <div id="generatingBadge" class="flex flex-col items-center justify-center transition-all duration-300 transform">
+                    <!-- Brand Logo -->
+                    <div class="w-20 h-20 mb-2 flex items-center justify-center">
+                        <img 
+                            src="https://i.postimg.cc/FKw2q4yy/ddd.png" 
+                            alt="Logo" 
+                            class="w-full h-full object-contain select-none pointer-events-none animate-pulse"
+                            onerror="this.src='https://placehold.co/100x100/fe2c55/ffffff?text=Tik'"
+                        >
+                    </div>
+                    <!-- Live Number -->
+                    <div id="liveFollowerCount" class="text-4xl font-black text-slate-800 tracking-tight font-mono">
+                        0
+                    </div>
+                    <div class="text-xs font-extrabold text-slate-400 uppercase tracking-widest mt-0.5">
+                        FOLLOWERS
+                    </div>
+                </div>
+
+                <!-- Text Status (Generating... / Successfully Generated / Verification) -->
+                <div class="my-6 text-center">
+                    <h3 id="generationStatusTitle" class="text-lg font-black text-[#FE2C55] tracking-tight transition-colors">
+                        Generating <span id="targetFollowersCount">1000</span> Followers
+                    </h3>
+                </div>
+
+                <!-- Progress Bar Capsule -->
+                <div class="w-full max-w-[280px] p-1.5 bg-white border border-slate-200/80 rounded-full shadow-inner mb-2">
+                    <div class="custom-progress-track h-4 w-full">
+                        <div id="generatingProgressBar" class="custom-progress-bar h-full w-[8%]"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 5: Success & Completed Screen -->
+            <div id="step5" class="step-view step-hidden flex-col items-center justify-center flex-grow py-3 text-center">
+                <div class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center text-3xl mb-3 shadow-inner">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+
+                <h3 class="text-xl font-black text-slate-800 tracking-tight mb-1">
+                    Followers Delivered!
+                </h3>
+
+                <p class="text-xs text-slate-500 leading-relaxed max-w-[280px] mb-6">
+                    Success! <strong id="successCountLabel" class="text-slate-800">1000</strong> followers have been sent to <strong id="successUserLabel" class="text-slate-800">@user</strong>. They will appear on your profile shortly.
+                </p>
+
+                <!-- New Boost Button -->
+                <button 
+                    id="restartBtn" 
+                    class="btn-action w-full py-3.5 text-white font-extrabold text-sm rounded-2xl uppercase tracking-wider shadow-lg mb-2"
+                >
+                    <i class="fa-solid fa-plus mr-1 text-xs"></i> Boost Another Account
+                </button>
+            </div>
+
+            <!-- Footer Domain Info -->
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-center gap-1.5 text-slate-400 text-[11px] font-semibold">
+                <i class="fa-solid fa-lock text-[10px]"></i>
+                <span>tikfamous.com</span>
+                <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                <span>256-Bit SSL Encrypted</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- Interactive JavaScript Engine -->
+    <script>
+        // Audio Synthesizer via Web Audio API (satisfying clicks & chimes)
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            try {
+                if (!audioCtx) initAudio();
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'click') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(450, now);
+                    osc.frequency.exponentialRampToValueAtTime(150, now + 0.08);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'tick') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600 + Math.random() * 200, now);
+                    gain.gain.setValueAtTime(0.06, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.04);
+                    osc.start(now);
+                    osc.stop(now + 0.04);
+                } else if (type === 'success') {
+                    // Chime arpeggio
+                    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                    notes.forEach((freq, idx) => {
+                        const noteOsc = audioCtx.createOscillator();
+                        const noteGain = audioCtx.createGain();
+                        noteOsc.connect(noteGain);
+                        noteGain.connect(audioCtx.destination);
+
+                        const startTime = now + idx * 0.09;
+                        noteOsc.frequency.setValueAtTime(freq, startTime);
+                        noteGain.gain.setValueAtTime(0.18, startTime);
+                        noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
+                        noteOsc.start(startTime);
+                        noteOsc.stop(startTime + 0.45);
+                    });
+                }
+            } catch (e) {
+                // Audio might be blocked until user gesture, safe to ignore
+            }
+        }
+
+        // DOM elements
+        const step1 = document.getElementById('step1');
+        const step2 = document.getElementById('step2');
+        const step3 = document.getElementById('step3');
+        const step4 = document.getElementById('step4');
+        const step5 = document.getElementById('step5');
+
+        const usernameInput = document.getElementById('usernameInput');
+        const connectBtn = document.getElementById('connectBtn');
+        const onlineCounter = document.getElementById('onlineCounter');
+
+        const connectingText = document.getElementById('connectingText');
+        const connectingProgressBar = document.getElementById('connectingProgressBar');
+        const displayConnectedUser = document.getElementById('displayConnectedUser');
+
+        const liveFollowerCount = document.getElementById('liveFollowerCount');
+        const targetFollowersCount = document.getElementById('targetFollowersCount');
+        const generationStatusTitle = document.getElementById('generationStatusTitle');
+        const generatingProgressBar = document.getElementById('generatingProgressBar');
+
+        const successCountLabel = document.getElementById('successCountLabel');
+        const successUserLabel = document.getElementById('successUserLabel');
+        const restartBtn = document.getElementById('restartBtn');
+
+        let currentUsername = '';
+        let chosenFollowers = 1000;
+
+        // Step Switcher Helper
+        function showStep(stepNumber) {
+            const steps = [step1, step2, step3, step4, step5];
+            steps.forEach((step, index) => {
+                if (index + 1 === stepNumber) {
+                    step.classList.remove('step-hidden');
+                    step.classList.add('step-active');
+                } else {
+                    step.classList.remove('step-active');
+                    step.classList.add('step-hidden');
+                }
+            });
+        }
+
+        // Fluctuating Online Users counter for authenticity
+        let onlineCount = 152;
+        setInterval(() => {
+            const delta = Math.floor(Math.random() * 7) - 3;
+            onlineCount = Math.max(130, Math.min(185, onlineCount + delta));
+            onlineCounter.textContent = onlineCount;
+        }, 3200);
+
+        // Step 1: Handle Connect Click
+        connectBtn.addEventListener('click', () => {
+            const val = usernameInput.value.trim().replace(/^@/, '');
+            if (!val) {
+                usernameInput.focus();
+                usernameInput.classList.add('ring-2', 'ring-red-400');
+                setTimeout(() => usernameInput.classList.remove('ring-2', 'ring-red-400'), 1000);
+                return;
+            }
+
+            playSound('click');
+            currentUsername = val;
+            displayConnectedUser.textContent = currentUsername.toUpperCase();
+            startConnectingSequence();
+        });
+
+        // Enter key shortcut
+        usernameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                connectBtn.click();
+            }
+        });
+
+        // Step 2: Connecting progress simulation
+        function startConnectingSequence() {
+            showStep(2);
+            connectingText.textContent = 'Connecting...';
+            connectingProgressBar.style.width = '15%';
+
+            setTimeout(() => {
+                connectingText.textContent = 'Searching database...';
+                connectingProgressBar.style.width = '45%';
+            }, 900);
+
+            setTimeout(() => {
+                connectingText.textContent = `User @${currentUsername} Found!`;
+                connectingProgressBar.style.width = '75%';
+            }, 1800);
+
+            setTimeout(() => {
+                connectingText.textContent = 'Ready!';
+                connectingProgressBar.style.width = '100%';
+            }, 2500);
+
+            setTimeout(() => {
+                showStep(3);
+            }, 3000);
+        }
+
+        // Step 3: Select followers package
+        window.selectFollowers = function(amount) {
+            playSound('click');
+            chosenFollowers = amount;
+            startGenerationSequence(amount);
+        };
+
+        // Step 4: Live number counting up
+        function startGenerationSequence(targetCount) {
+            showStep(4);
+            targetFollowersCount.textContent = targetCount;
+            liveFollowerCount.textContent = '0';
+            generationStatusTitle.className = 'text-lg font-black text-[#FE2C55] tracking-tight transition-colors';
+            generationStatusTitle.innerHTML = `Generating <span id="targetFollowersCount">${targetCount}</span> Followers`;
+            generatingProgressBar.style.width = '10%';
+
+            let current = 0;
+            const duration = 2400; // ms
+            const startTime = performance.now();
+
+            function updateCounter(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Ease out cubic
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                current = Math.floor(easeOut * targetCount);
+                liveFollowerCount.textContent = current;
+
+                // Sync progress bar
+                const barWidth = 10 + (progress * 85);
+                generatingProgressBar.style.width = `${barWidth}%`;
+
+                // Subtle audio ticks
+                if (Math.random() > 0.6) {
+                    playSound('tick');
+                }
+
+                if (progress < 1) {
+                    requestAnimationFrame(updateCounter);
+                } else {
+                    // Completed generation
+                    liveFollowerCount.textContent = targetCount;
+                    generatingProgressBar.style.width = '100%';
+                    playSound('success');
+
+                    // Turn title to bright cyan "Successfully Generated" as in the video
+                    generationStatusTitle.className = 'text-xl font-black text-[#25F4EE] tracking-tight transition-all scale-105';
+                    generationStatusTitle.textContent = 'Successfully Generated';
+
+                    // Transition directly to completion screen
+                    setTimeout(() => {
+                        showSuccessScreen();
+                    }, 1400);
+                }
+            }
+
+            requestAnimationFrame(updateCounter);
+        }
+
+        // Step 5: Final Success Screen (No Verification)
+        function showSuccessScreen() {
+            successCountLabel.textContent = chosenFollowers;
+            successUserLabel.textContent = `@${currentUsername}`;
+            showStep(5);
+        }
+
+        // Restart flow
+        restartBtn.addEventListener('click', () => {
+            playSound('click');
+            usernameInput.value = '';
+            showStep(1);
+        });
+
+        // Initialize audio on first user touch anywhere
+        document.addEventListener('pointerdown', initAudio, { once: true });
+    </script>
+</body>
+</html>
